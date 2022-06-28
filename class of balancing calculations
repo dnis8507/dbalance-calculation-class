@@ -1,0 +1,265 @@
+package com.balance.dbalance;
+
+
+
+public class Calculo {
+	
+
+
+	double Vo,Vox,Voy,Vpp,Vppx,Vppy,angVo,angVpp,Vr,Vrx,Vry,AngVr,
+	S1,VoCancelacion,Wb,Wp, angWp,angWb,AngS1,InluenciaPP,
+	angVPesoPrueba,Wb1,VPesoPrueba,anguloCoeficiente,coeficienteInfluencia;
+	
+	public Calculo(){
+		
+	}
+
+	public double Pruftecknick(double Mr,double Vo,double angVo,double R){
+		/* calculando valor de magnitud del peso de prueba segun el metodo de pruftecnick 
+		engeenierr guide pag 138
+		*/ 
+		double Pp=Mr*Vo/R;
+		this.angVo=angVo;	
+		return Pp;
+		
+	}
+	
+	public double angVo(){
+		return angVo;
+	}
+	
+	public double Mobius(double Mr,double rpm,double R){
+		// calculando peso de prueba utilizando el metodo de la mobius pag 10.10
+		
+		
+		double Pp=(0.1*Mr)/(0.011*100*R*(rpm/1000)*(rpm/1000));
+		return Pp; 
+	}
+	
+	public double mobius_angulo(double Vo,double angVo,double rpm){
+		return angVo;
+		
+	}
+	public double Bently( double Mr,double Vo,double angvo,double R, double rpm,double wn1,double RelacionAmortiguamiento,double lambda){
+		/* calculando segun el metodo de bently arti undertanding a dynamics stiffnes
+		 * 
+		 */
+		Vectores v=new Vectores();
+		
+		double rpm1=rpm*2*Math.PI/60;
+		double wnf=wn1*Math.PI*2/60;
+		double K=wnf*wnf*Mr/9.8;
+		double D=RelacionAmortiguamiento*Math.sqrt(2*K*(Mr/9.8));
+		
+		double Kdsx=K-rpm1*rpm1*(Mr/9.8);
+		double Kdsy=D*rpm1*(1-lambda);
+		    
+		double Kds=Math.sqrt(Kdsx*Kdsx+Kdsy*Kdsy);
+		
+		
+		
+		
+		double Pp=((Vo*Math.exp(-6))*Kds)/(R*rpm1*rpm1);
+		return Pp;
+	}
+	public double angPp(double Mr,double Vo,double angvo,double R, double rpm,double wn1,double RelacionAmortiguamiento,double lambda ){
+		// angulo por el metodo Bently
+		Vectores v=new Vectores();
+		
+		double rpm1=rpm*2*Math.PI/60;
+		double wnf=wn1*Math.PI*2;
+		double K=2*Math.PI*wnf*wnf*Mr/9.8;
+		double D=RelacionAmortiguamiento*Math.sqrt(2*K*Mr/9.8);
+		
+		double Kdsx=K-rpm1*rpm1*Mr/9.8;
+		double Kdsy=D*rpm1*(1-lambda);
+		double Kds=Math.sqrt(Kdsx*Kdsx+Kdsy*Kdsy);
+		
+		
+		double angKds=Math.atan2(Kdsy, Kdsx);
+		
+		
+		double angPp=angvo+angKds;
+		
+		
+		return angPp;
+	}
+	
+
+	public double WB(double Vo,double Vpp,double angVpp,double angVo,
+			double Wp, double angWp){
+	
+		Vectores vectores=new Vectores();
+	     double Delta=(vectores.RestaDeVectores(Vpp, Vo, angVpp, angVo));
+	     double anguloDelta=vectores.anguloResta(angVpp, angVo);
+	     coeficienteInfluencia=vectores.DivisionDeVectores(Vo, Delta, angVo, anguloDelta);
+	      anguloCoeficiente=vectores.anguloDivision(angVo, anguloDelta);
+	     Wb=vectores.MultiplicacionDeVectores(Wp, coeficienteInfluencia, angWp, anguloCoeficiente);
+		
+		
+	   return Wb;
+}		
+
+	
+	/*
+	 * calculando posicion del peso de balance 
+	 */
+	public double anguWb(double Vo,double Vpp,double angVpp,double angVo,
+			double Wp, double angWp){
+		
+		Vectores vectores=new Vectores();
+	     double Delta=(vectores.RestaDeVectores(Vpp, Vo, angVpp, angVo));
+	     double anguloDelta=vectores.anguloResta(angVpp, angVo);
+	     coeficienteInfluencia=vectores.DivisionDeVectores(Vo, Delta, angVo, anguloDelta);
+	      anguloCoeficiente=vectores.anguloDivision(angVo, anguloDelta);
+	     Wb=vectores.MultiplicacionDeVectores(Wp, coeficienteInfluencia, angWp, anguloCoeficiente);
+					
+		angWb=vectores.anguloMultiplicacion(angWp, anguloCoeficiente);
+		
+		if(angWb<0){
+			angWb=angWb+360;
+		}else if(angWb>360){
+			angWb=angWb-360;
+		}
+		
+		return angWb;
+	}
+	
+	// calculando  valores por encima de la critica
+	
+	public double angWbEncimaCrit (double Vo,double Vpp,double angVpp,double angVo,
+			double Wp, double angWp){
+		
+		Vectores vectores=new Vectores();
+	     double Delta=(vectores.RestaDeVectores(Vpp, Vo, angVpp, angVo+180));
+	     double anguloDelta=vectores.anguloResta(angVpp, angVo+180);
+	     coeficienteInfluencia=vectores.DivisionDeVectores(Vo, Delta, angVo+180, anguloDelta);
+	      anguloCoeficiente=vectores.anguloDivision(angVo+180, anguloDelta);
+	     Wb=vectores.MultiplicacionDeVectores(Wp, coeficienteInfluencia, angWp, anguloCoeficiente);
+					
+		angWb=vectores.anguloMultiplicacion(angWp, anguloCoeficiente);
+		
+		if(angWb<0){
+			angWb=angWb+360;
+		}else if(angWb>360){
+			angWb=angWb-360;
+		}
+		if(angWb<0){
+			angWb=angWb+360;
+		}else if(angWb>360){
+			angWb=angWb-360;
+		}
+		return angWb;
+		
+		
+		
+	}
+	
+	public double pronostico(double Vo,double Vpp,double angVpp,double angVo,
+			double Wp, double angWp,double Pb,double angPb){
+		
+		 Vectores vectores=new Vectores();
+	     double Delta=(vectores.RestaDeVectores(Vpp, Vo, angVpp, angVo));
+	     double anguloDelta=vectores.anguloResta(angVpp, angVo);
+	     coeficienteInfluencia=vectores.DivisionDeVectores(Wp, Delta, angWp+180, anguloDelta);
+	     anguloCoeficiente=vectores.anguloDivision(angWp+180, anguloDelta);
+	      
+	     double V22=vectores.DivisionDeVectores(Pb, coeficienteInfluencia, angPb, anguloCoeficiente);
+	     double angV22=vectores.anguloDivision(angPb, anguloCoeficiente);
+	     
+	     double Vpro=vectores.SumaVectores(V22, Vo, angV22, angVo);
+	     double angVpro=vectores.angSuma(angV22, angVo);
+	      
+		
+		return Vpro;
+	}
+	
+	public double anguloPronostico(double Vo,double Vpp,double angVpp,double angVo,
+			double Wp, double angWp,double Pb,double angPb){
+		
+		 Vectores vectores=new Vectores();
+	     double Delta=(vectores.RestaDeVectores(Vpp, Vo, angVpp, angVo));
+	     double anguloDelta=vectores.anguloResta(angVpp, angVo);
+	     coeficienteInfluencia=vectores.DivisionDeVectores(Wp, Delta, angWp+180, anguloDelta);
+	     anguloCoeficiente=vectores.anguloDivision(angWp+180, anguloDelta);
+	      
+	     double V22=vectores.DivisionDeVectores(Pb, coeficienteInfluencia, angPb, anguloCoeficiente);
+	     double angV22=vectores.anguloDivision(angPb, anguloCoeficiente);
+	     
+	     double Vpro=vectores.SumaVectores(V22, Vo, angV22, angVo);
+	     double angVpro=vectores.angSuma(angV22, angVo);
+	      
+		
+		
+		return angVpro;
+	}
+	
+	public double coeficientedeinluencia(double Vo,double Vpp,double angVpp,double angVo,
+			double Wp, double angWp){
+		Vectores vectores=new Vectores();
+	     double Delta=vectores.RestaDeVectores(Vpp, Vo, angVpp, angVo);
+	     double anguloDelta=vectores.anguloResta(angVpp, angVo);
+	      coeficienteInfluencia=vectores.DivisionDeVectores(Wp, Delta, angWp, anguloDelta);
+	      anguloCoeficiente=vectores.anguloDivision(angWp, anguloDelta);
+		return coeficienteInfluencia;
+	}
+
+	public double angCoeficiente(double Vo,double Vpp,double angVpp,double angVo,
+			double Wp, double angWp){
+		
+		Vectores vectores=new Vectores();
+	     double Delta=vectores.RestaDeVectores(Vpp, Vo, angVpp, angVo);
+	     double anguloDelta=vectores.anguloResta(angVpp, angVo);
+	      coeficienteInfluencia=vectores.DivisionDeVectores(Wp, Delta, angWp+180, anguloDelta);
+	      anguloCoeficiente=vectores.anguloDivision(angWp+180, anguloDelta);
+		
+				return anguloCoeficiente;
+		
+	}
+	
+	public double Kds( double Mr,double R, double rpm,
+			double wn1,double RelacionAmortiguamiento,double lambda){
+		
+    
+		
+		double rpm1=rpm*2*Math.PI/60;
+		double wnf=wn1*Math.PI*2/60;
+		double K=wnf*wnf*Mr/9.8;
+		double D=RelacionAmortiguamiento*Math.sqrt(2*K*(Mr/9.8));
+		
+		double Kdsx=K-rpm1*rpm1*(Mr/9.8);
+		double Kdsy=D*rpm1*(1-lambda);
+		    
+		double Kds=Math.sqrt(Kdsx*Kdsx+Kdsy*Kdsy);
+		
+		return Kds;
+		
+	}
+	public double angKds ( double Mr,double R, double rpm,
+			double wn1,double RelacionAmortiguamiento,double lambda){
+		
+		double rpm1=rpm*2*Math.PI/60;
+		double wnf=wn1*Math.PI*2/60;
+		double K=wnf*wnf*Mr/9.8;
+		double D=RelacionAmortiguamiento*Math.sqrt(2*K*(Mr/9.8));
+		
+		double Kdsx=K-rpm1*rpm1*(Mr/9.8);
+		double Kdsy=D*rpm1*(1-lambda);
+		    
+		double angKds=Math.toDegrees(Math.atan2(Kdsy, Kdsx));
+		
+		return angKds;
+		 
+	}
+public double Uper(double Mr,double rpm,double gradoCalidad){
+	
+	double Uper=9549*gradoCalidad*(Mr/(rpm*10));
+	return Uper;
+	
+}
+
+
+
+}
+
+
